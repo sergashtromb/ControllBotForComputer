@@ -7,15 +7,19 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Threading;
 using File = System.IO.File;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MyBot
 {
 
 
-    public struct ChatBot
+    public class ChatBot
     {
 
         public string token;
+
+        public Dictionary<string, Dictionary<string, string>> command;
 
     }
 
@@ -28,7 +32,7 @@ namespace MyBot
 
             ChatBot chatBot = JsonConvert.DeserializeObject<ChatBot>(fileData);
             var botClient = new TelegramBotClient(chatBot.token);
-
+            
             botClient.StartReceiving(Update, Error);
 
 
@@ -40,6 +44,13 @@ namespace MyBot
             var message = update.Message;
             if (message != null)
             {
+                if (message.Text == "Открыть папку")
+                {
+                    string path = "C:\\Users\\Zver\\Documents";
+                    Process.Start(new ProcessStartInfo { FileName="explorer", Arguments= $"/n, /select, {path}" });
+                    Console.WriteLine("OK");
+                    
+                }
                 await client.SendTextMessageAsync(message.Chat.Id, "Сообщение");
             }
         }
