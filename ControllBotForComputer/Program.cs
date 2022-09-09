@@ -9,6 +9,7 @@ using System.Threading;
 using File = System.IO.File;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Telegram.Bot.Types.InputFiles;
 
 namespace MyBot
 {
@@ -56,9 +57,9 @@ namespace MyBot
                     Console.WriteLine("Попытка доступа!");
                 }
                 else
-                {
+                {                    
                     if (com == "")
-                    {
+                    {                        
                         if (message.Text == "Открыть папку")
                         {
 
@@ -87,6 +88,16 @@ namespace MyBot
                             await client.SendTextMessageAsync(message.Chat.Id, ProccessesString());
                             await client.SendTextMessageAsync(message.Chat.Id, "Укажите имя процесса");
                             com = "KillProccess";
+                        } 
+                        else if (message.Text == "Запустить процесс") 
+                        {
+                            await client.SendTextMessageAsync(message.Chat.Id, "Укажи название .exe");
+                            com = "StartProccess";
+                        } 
+                        else if (message.Text == "Загрузить файл")
+                        {
+                            await client.SendTextMessageAsync(message.Chat.Id, "Введи название файла");
+                            com = "FileForLoad";
                         }
                         else
                         {
@@ -159,6 +170,44 @@ namespace MyBot
                         }
                         await client.SendTextMessageAsync(message.Chat.Id, "Жду команду");
                         com = "";
+                    } 
+                    else if (com == "StartProccess")
+                    {
+                        string fileName = message.Text;
+                        try
+                        {
+                            Process.Start(fileName);
+                            await client.SendTextMessageAsync(message.Chat.Id, $"Процесс {fileName} запущен");
+                        }
+                        catch (Exception ex)
+                        {
+
+                            await client.SendTextMessageAsync(message.Chat.Id, $"{ex.Message}");
+                        }
+                        com = "";
+                    } 
+                    else if (com == "LoadFile")
+                    {
+                        string path = message.Text.Replace("/", "\\"); 
+                        if (new FileInfo(path).Length < (50*1024*1024))
+                        {
+                            await using Stream stream = File.OpenRead($"{path}");
+                            await client.SendDocumentAsync(message.Chat.Id, new InputOnlineFile(stream, fileName), "Файл загружен");
+                            await client.SendTextMessageAsync(message.Chat.Id, "Жду команду");
+                        } 
+                        else
+                        {
+                            await client.SendTextMessageAsync(message.Chat.Id, "Файл превышает 50 MB");
+                        }
+                        
+                        com = "";
+                        fileName = "";
+                    } 
+                    else if (com == "FileForLoad")
+                    {
+                        fileName = message.Text;
+                        await client.SendTextMessageAsync(message.Chat.Id, "Укажи путь нахождения файла");
+                        com = "LoadFile";
                     }
 
                 }
@@ -198,6 +247,7 @@ namespace MyBot
                 }
             }
         } 
+
 
         public static string ProccessesString()
         {
